@@ -17,9 +17,11 @@ public class FourierSeriesCalculator {
     static final int N_MAX = 40; // Highest Harmonic
 
     public static void main(String[] args) {
+
+        BufferedReader br = null;
         try
         {
-            BufferedReader br = new BufferedReader(new FileReader("D1.txt"));
+            br = new BufferedReader(new FileReader("D1.txt"));
             String line = br.readLine();
             String[] values = line.split(",");
             a = Arrays.stream(values)
@@ -27,6 +29,13 @@ public class FourierSeriesCalculator {
                     .toArray();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally
+        {
+            try {
+                if(br != null) br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         SPS = T/((double) a.length);
