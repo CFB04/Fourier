@@ -1,24 +1,57 @@
-import java.util.Arrays;
+import javax.sound.sampled.*;
+import java.io.*;
+import java.nio.ByteBuffer;
 
 public class WaveGen {
-    public static void main(String[] args) {
-        double[] f = {350.0, 700.0, 1050.0, 1400.0, 1750.0};
-        double[] a = {1.0, 0.5, 0.7, 0.3, 0.5};
-        double[] p = {0, 0.8, -0.7, 1.5, -0.4};
+    public static void gen(double[] f, double[] a, double[] p, float sampleRate, float t, String filename)
+    {
+        int samples = (int) (t * sampleRate);
 
-        double[] l = new double[10001];
+        ByteBuffer bb = ByteBuffer.allocate(samples * Float.BYTES);
 
-        for (int i = 0; i < 10001; i++) {
-            l[i] = f(f,a,p,0.2 * i / 10000.0);
+        double max = f(f,a,p,0);
+        for (int i = 0; i < samples; i++) {
+            double v = Math.abs(f(f,a,p,i / sampleRate));
+            if(v > max) max = v;
         }
 
-        //System.out.println(Arrays.toString(l));
+        for (int i = 0; i < samples; i++) {
+            float v = (float) (f(f,a,p,i / sampleRate) / max);
+            v *= Integer.MAX_VALUE;
+            bb.putInt((int) v);
+        }
+
+        ByteArrayInputStream iS = new ByteArrayInputStream(bb.array());
+        AudioFormat aF = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, Integer.SIZE, 1, Integer.BYTES, sampleRate, true);
+        AudioInputStream ais = new AudioInputStream(iS, aF, samples);
+
+        File fileOut = new File(filename + ".wav");
+        try {
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fileOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeInputStream(iS);
+            closeInputStream(ais);
+        }
+    }
+
+    public static void closeInputStream(Closeable c)
+    {
+        if(c != null)
+        {
+            try {
+                c.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static double f(double[] f, double[] a, double[] p, double x)
     {
         double o = 0.0;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < Math.min(Math.min(f.length, a.length), p.length); i++) {
             o += a[i]*Math.cos(Math.PI*2*f[i]*x-p[i]);
         }
         return o;

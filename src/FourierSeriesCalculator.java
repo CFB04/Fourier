@@ -14,7 +14,7 @@ public class FourierSeriesCalculator {
     static final double T = 0.2; // Total time (s), This is the time of the last sample minus time 0. The full time domain for this experiment was actually 0.2001999...
     static double SPS; // Seconds per sample
     static double dT; // ∆t
-    static final int N_MAX = 40; // Highest Harmonic
+    static final int N_MAX = 100; // Highest Harmonic
 
     public static void main(String[] args) {
 
@@ -75,6 +75,10 @@ public class FourierSeriesCalculator {
         System.out.println();
         Arrays.stream(phases).forEach(e -> System.out.print(df.format(e) + ", " ));
         System.out.println();
+
+        //gen(new double[]{300.0}, new double[]{1.0}, new double[]{0.0}, 44100f, 5f, "DSine");
+
+        WaveGen.gen(freqs, amps, phases, 44100f, 5f, "DBase");
     }
 
     public static double mag(double x1, double x2)
@@ -118,7 +122,7 @@ public class FourierSeriesCalculator {
                 seriesParams[n-1] = temp;
             }
 
-            for (int j = 0; j < 10001; j++) {
+            for (int j = 0; j < a.length; j++) {
                 double o = 0.0;
                 for (int n = 0; n < 5; n++) o += seriesParams[n][1]*Math.cos(Math.PI*2*seriesParams[n][0]*(0.2 * j / 10000.0)-seriesParams[n][2]);
 
