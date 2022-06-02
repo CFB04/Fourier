@@ -36,6 +36,39 @@ public class WaveGen {
         }
     }
 
+    public static void genOriginal(double[] w, float sampleRate, String filename)
+    {
+        int samples = w.length;
+
+        ByteBuffer bb = ByteBuffer.allocate(w.length * Integer.BYTES);
+
+        double max = w[0];
+        for (double value : w) {
+            double v = Math.abs(value);
+            if (v > max) max = v;
+        }
+
+        for (double value : w) {
+            float v = (float) value;
+            v *= Integer.MAX_VALUE;
+            bb.putInt((int) v);
+        }
+
+        ByteArrayInputStream iS = new ByteArrayInputStream(bb.array());
+        AudioFormat aF = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, Integer.SIZE, 1, Integer.BYTES, sampleRate, true);
+        AudioInputStream ais = new AudioInputStream(iS, aF, samples);
+
+        File fileOut = new File(filename + ".wav");
+        try {
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fileOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeInputStream(iS);
+            closeInputStream(ais);
+        }
+    }
+
     public static void closeInputStream(Closeable c)
     {
         if(c != null)

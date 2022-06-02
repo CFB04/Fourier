@@ -8,6 +8,8 @@ public class FourierSeriesCalculator {
     static FourierSettings fS;
 
     public static void main(String[] args) {
+        WaveGen.genOriginal(getArrayFromFile("D1.txt"), 50000f, "DOrig");
+
         fS = new FourierSettings(4.0, 100, 2.0, 0.00002, 100, 2.0f, 44100f);
         calcFourierSeries("D1.txt", "DBase", fS, 292.2579);
     }
