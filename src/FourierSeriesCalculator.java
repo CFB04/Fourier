@@ -8,7 +8,7 @@ public class FourierSeriesCalculator {
     static FourierSettings fS;
 
     public static void main(String[] args) {
-        WaveGen.genOriginal(getArrayFromFile("D1.txt"), 50000f, "DOrig");
+        WaveGen.genOriginal(getArrayFromFile("D1.txt"), 50000f, 2D, "DOrig");
 
         fS = new FourierSettings(4.0, 100, 2.0, 0.00002, 100, 2.0f, 44100f);
         calcFourierSeries("D1.txt", "DBase", fS, 292.2579);
@@ -132,7 +132,7 @@ public class FourierSeriesCalculator {
         BufferedReader br = null;
         try
         {
-            br = new BufferedReader(new FileReader(fileName));
+            br = new BufferedReader(new FileReader("soundFiles/input/" + fileName));
             line = br.readLine();
         } catch (IOException e) {
             e.printStackTrace();

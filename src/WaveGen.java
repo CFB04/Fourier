@@ -25,7 +25,7 @@ public class WaveGen {
         AudioFormat aF = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, Integer.SIZE, 1, Integer.BYTES, sampleRate, true);
         AudioInputStream ais = new AudioInputStream(iS, aF, samples);
 
-        File fileOut = new File(filename + ".wav");
+        File fileOut = new File("output/" + filename + ".wav");
         try {
             AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fileOut);
         } catch (IOException e) {
@@ -36,7 +36,7 @@ public class WaveGen {
         }
     }
 
-    public static void genOriginal(double[] w, float sampleRate, String filename)
+    public static void genOriginal(double[] w, float sampleRate, double volumeScalar, String filename)
     {
         int samples = w.length;
 
@@ -49,16 +49,14 @@ public class WaveGen {
         }
 
         for (double value : w) {
-            float v = (float) value;
-            v *= Integer.MAX_VALUE;
-            bb.putInt((int) v);
+            bb.putInt((int) (value * Integer.MAX_VALUE * volumeScalar));
         }
 
         ByteArrayInputStream iS = new ByteArrayInputStream(bb.array());
         AudioFormat aF = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, Integer.SIZE, 1, Integer.BYTES, sampleRate, true);
         AudioInputStream ais = new AudioInputStream(iS, aF, samples);
 
-        File fileOut = new File(filename + ".wav");
+        File fileOut = new File("soundFiles/output/" + filename + ".wav");
         try {
             AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fileOut);
         } catch (IOException e) {
