@@ -20,19 +20,17 @@ public final class Util {
 
     public double[] normalizeArray(double[] a)
     {
-        double[] out = a;
-
         double max = a[0];
         for (double value : a) {
             double v = Math.abs(value);
             if (v > max) max = v;
         }
 
-        for (double value : out) {
+        for (double value : a) {
             value /= max;
         }
 
-        return out;
+        return a;
     }
 
     public static double mag(double x1, double x2)
@@ -128,12 +126,9 @@ public final class Util {
         double min = center;
 
         if(iterations > 0) {
-            int minIndex = 0;
-
-            for (int i = 0; i < nSamplesPerIteration; i++) { // TODO int i = 1
+            for (int i = 1; i < nSamplesPerIteration; i++) {
                 double x = center + initialRadius * (2.0 * i - nSamplesPerIteration + 1.0) / (double) (nSamplesPerIteration - 1);
                 if (bbf.evaluate(x) < bbf.evaluate(min)) {
-                    minIndex = i;
                     min = x;
                 }
             }

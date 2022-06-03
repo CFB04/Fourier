@@ -14,13 +14,8 @@ public class FourierSeriesCalculator {
 
     public static void calcFourierSeries(String fileIn, String fileOutName, FourierSettings fourierSettings, double bestGuessBaseFreq)
     {
-//        // File settings
-//        final String INPUT_FILE; // Full name of input file (including filetype extension)
-//        final String OUTPUT_FILE; // Name of output file (excluding filetype extension)
-
         // Array of recorded values
         double[] aWave = Util.getArrayFromFile(fileIn);
-        //double dT = recordingTime/((double) aWave.length - 1); // - 1 Because if recording is for example 2 seconds long with 10 samples/s, there would be 21 samples if there's a sample at the extremes of 0s and 2s (which there was for this experiment)
 
         // [freq, amp, phase] for each harmonic
         double[][] seriesParams = new double[fourierSettings.N_HARMONICS][3];
