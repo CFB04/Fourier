@@ -29,7 +29,7 @@ public class FourierSeriesCalculator {
 
         // Find the base frequency that minimizes squared error over the whole time domain with search
         int nPrecision = 10; // // Freq precision is INIT_R/25^nPrecision
-        for (int i = 1; i <= nPrecision; i++) freq = fourierLSSearch(fourierSettings.INIT_RAD * Math.pow(0.04, i - 1), freq, aWave, fourierSettings);
+        for (int i = 1; i <= nPrecision; i++) freq = fourierErrorSearch(fourierSettings.INIT_RAD * Math.pow(0.04, i - 1), freq, aWave, false, fourierSettings);
 
         // Calculate fourier transform at harmonics of base frequency
         for (int n = 1; n <= fourierSettings.N_HARMONICS; n++) {
@@ -87,7 +87,7 @@ public class FourierSeriesCalculator {
         return new double[]{f, tMag, tPhase}; // Frequency, Magnitude, Phase
     }
 
-    public static double fourierLSSearch(double radius, double guessFreq, double[] aWave, FourierSettings fS)
+    public static double fourierErrorSearch(double radius, double guessFreq, double[] aWave, boolean squareError, FourierSettings fS)
     {
         double[][] seriesParams = new double[fS.N_HARMONICS_LS][3];
 
@@ -107,7 +107,11 @@ public class FourierSeriesCalculator {
                 }
 
                 double err = o - aWave[j];
-                sums[i] += err * err;
+
+                // Absolute error is probably better because it conforms to outliers less and doesn't raise complexity as this is a simple search
+                if(squareError) err *= err;
+                else err = Math.abs(err);
+                sums[i] += err;
             }
         }
 
