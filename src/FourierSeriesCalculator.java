@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
 import java.text.DecimalFormat;
 import java.util.Arrays;
 
@@ -8,15 +6,10 @@ public class FourierSeriesCalculator {
     static FourierSettings fS;
 
     public static void main(String[] args) {
-        WaveGen.genOriginal(getArrayFromFile("D1.txt"), 50000f, 2D, "DOrig");
+//        WaveGen.gen(getArrayFromFile("D1.txt"), 50000f, 10D, "DOrig");
 
-        fS = new FourierSettings(4.0, 100, 2.0, 0.00002, 100, 2.0f, 44100f);
-        calcFourierSeries("D1.txt", "DBase", fS, 292.2579);
-    }
-
-    public static double mag(double x1, double x2)
-    {
-        return Math.sqrt(x1*x1+x2*x2);
+        fS = new FourierSettings(4.0, 5, 2.0, 0.00002, 100, 2.0f, 44100f);
+        calcFourierSeries("D1.txt", "DTest", fS, 292.2579);
     }
 
     public static void calcFourierSeries(String fileIn, String fileOutName, FourierSettings fourierSettings, double bestGuessBaseFreq)
@@ -26,7 +19,7 @@ public class FourierSeriesCalculator {
 //        final String OUTPUT_FILE; // Name of output file (excluding filetype extension)
 
         // Array of recorded values
-        double[] aWave = getArrayFromFile(fileIn);
+        double[] aWave = Util.getArrayFromFile(fileIn);
         //double dT = recordingTime/((double) aWave.length - 1); // - 1 Because if recording is for example 2 seconds long with 10 samples/s, there would be 21 samples if there's a sample at the extremes of 0s and 2s (which there was for this experiment)
 
         // [freq, amp, phase] for each harmonic
@@ -88,7 +81,7 @@ public class FourierSeriesCalculator {
         sumA *= m;
         sumB *= m;
 
-        tMag = mag(sumA, sumB);
+        tMag = Util.mag(sumA, sumB);
         tPhase = Math.atan(sumB/sumA);
 
         return new double[]{f, tMag, tPhase}; // Frequency, Magnitude, Phase
@@ -122,34 +115,6 @@ public class FourierSeriesCalculator {
         for (int i = 0; i < 49; i++) if(sums[i] < sums[min]) min = i;
 
         return guessFreq + (radius * (min - 24) / 25);
-    }
-
-    public static double[] getArrayFromFile(String fileName)
-    {
-        double[] out;
-        String line = "";
-
-        BufferedReader br = null;
-        try
-        {
-            br = new BufferedReader(new FileReader("soundFiles/input/" + fileName));
-            line = br.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally
-        {
-            String[] values = line.split(",");
-            out = Arrays.stream(values)
-                    .mapToDouble(Double::parseDouble)
-                    .toArray();
-            try {
-                if(br != null) br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return out;
     }
 
     public static class FourierSettings
