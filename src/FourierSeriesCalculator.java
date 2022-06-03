@@ -8,8 +8,8 @@ public class FourierSeriesCalculator {
     public static void main(String[] args) {
 //        WaveGen.gen(getArrayFromFile("D1.txt"), 50000f, 10D, "DOrig");
 
-        fS = new FourierSettings(4.0, 5, 2.0, 0.00002, 100, 2.0f, 44100f);
-        calcFourierSeries("D1.txt", "DTest", fS, 292.2579);
+        fS = new FourierSettings(10.0, 40, 0.20, 0.00002, 40, 2.0f, 44100f);
+        calcFourierSeries("D1.txt", "DBase", fS, 292.2579);
     }
 
     public static void calcFourierSeries(String fileIn, String fileOutName, FourierSettings fourierSettings, double bestGuessBaseFreq)
@@ -28,8 +28,7 @@ public class FourierSeriesCalculator {
         double freq = bestGuessBaseFreq;
 
         // Find the base frequency that minimizes squared error over the whole time domain with search
-        int nPrecision = 10; // // Freq precision is INIT_R/25^nPrecision
-        for (int i = 1; i <= nPrecision; i++) freq = fourierErrorSearch(fourierSettings.INIT_RAD * Math.pow(0.04, i - 1), freq, aWave, false, fourierSettings);
+        freq = fourierErrorSearch(fourierSettings.INIT_RAD, freq, aWave, 49, 10, false, fourierSettings);
 
         // Calculate fourier transform at harmonics of base frequency
         for (int n = 1; n <= fourierSettings.N_HARMONICS; n++) {
@@ -48,10 +47,10 @@ public class FourierSeriesCalculator {
             phases[i] = seriesParams[i][2];
         }
 
-        System.out.println("Freq of LS ERROR: " + freq);
+        System.out.println("Frequency of Minimum ERROR: " + freq);
 
         // Print values of the different harmonics
-        DecimalFormat df = new DecimalFormat("0.000000");
+        DecimalFormat df = new DecimalFormat("0.000000000");
         Arrays.stream(freqs).forEach(e -> System.out.print(df.format(e) + ", " ));
         System.out.println();
         Arrays.stream(amps).forEach(e -> System.out.print(df.format(e) + ", " ));
@@ -73,7 +72,7 @@ public class FourierSeriesCalculator {
         double C = 2.0 * Math.PI * f;
 
         for (int i = 0; i < aWave.length; i++){
-            sumA += aWave[i] * Math.cos(C*i*fS.DELTA_TIME); // TODO Used to be SPS not dT, if broken change back
+            sumA += aWave[i] * Math.cos(C*i*fS.DELTA_TIME);
             sumB += aWave[i] * Math.sin(C*i*fS.DELTA_TIME);
         }
 
@@ -87,45 +86,43 @@ public class FourierSeriesCalculator {
         return new double[]{f, tMag, tPhase}; // Frequency, Magnitude, Phase
     }
 
-    public static double fourierErrorSearch(double radius, double guessFreq, double[] aWave, boolean squareError, FourierSettings fS)
+    public static double fourierErrorSearch(double radius, double guessFreq, double[] aWave, int nSamplesPerIteration, int iterations, boolean squareError, FourierSettings fS)
     {
-        double[][] seriesParams = new double[fS.N_HARMONICS_LS][3];
+        double[][] seriesParams = new double[fS.N_HARMONICS_ERR][3];
 
-        double[] sums = new double[49];
-        for (int i = 0; i < 49; i++) {
-            double f = guessFreq + (radius * (i - 24) / 25.0);
-
-            for (int n = 1; n <= fS.N_HARMONICS_LS; n++) {
+        return Util.evenSampledMinimumSearch(guessFreq, radius, nSamplesPerIteration, iterations, (x) ->
+        {
+            double f = x[0];
+            for (int n = 1; n <= fS.N_HARMONICS_ERR; n++) {
                 double[] temp = fourier(f * n, aWave, fS);
                 seriesParams[n-1] = temp;
             }
 
-            for (int j = 0; j < aWave.length; j++) {
-                double o = 0.0;
-                for (int n = 0; n < fS.N_HARMONICS_LS; n++) {
-                    o += seriesParams[n][1] * Math.cos(Math.PI * 2 * seriesParams[n][0] * (j * fS.DELTA_TIME) - seriesParams[n][2]);
-                }
+            double tErr = 0.0;
 
-                double err = o - aWave[j];
+            for (int i = 0; i < aWave.length; i++) {
+                double w = 0.0;
+
+                for(int n = 0; n < fS.N_HARMONICS_ERR; n++) w += seriesParams[n][1] * Math.cos(Math.PI * 2 * seriesParams[n][0] * (i * fS.DELTA_TIME) - seriesParams[n][2]);
+
+                double err = w - aWave[i];
 
                 // Absolute error is probably better because it conforms to outliers less and doesn't raise complexity as this is a simple search
                 if(squareError) err *= err;
                 else err = Math.abs(err);
-                sums[i] += err;
+
+                tErr += err;
             }
-        }
 
-        int min = 0;
-        for (int i = 0; i < 49; i++) if(sums[i] < sums[min]) min = i;
-
-        return guessFreq + (radius * (min - 24) / 25);
+            return tErr;
+        });
     }
 
     public static class FourierSettings
     {
         // Input settings
         final double INIT_RAD; // Initial freq radius for LS error search
-        final int N_HARMONICS_LS; // Number of harmonics to use to calculate LS error
+        final int N_HARMONICS_ERR; // Number of harmonics to use to calculate error
         final double TOTAL_TIME; // Time of experiment
         final double DELTA_TIME; // Time between each sample
 
@@ -134,9 +131,9 @@ public class FourierSeriesCalculator {
         final float OUT_TIME; // Total time of output file
         final float SAMPLE_RATE; // Sample rate of output file
 
-        public FourierSettings(double initRad, int nHarmonicsLS, double totalTime, double deltaTime, int nHarmonics, float outTime, float sampleRate) {
+        public FourierSettings(double initRad, int nHarmonicsErr, double totalTime, double deltaTime, int nHarmonics, float outTime, float sampleRate) {
             this.INIT_RAD = initRad;
-            this.N_HARMONICS_LS = nHarmonicsLS;
+            this.N_HARMONICS_ERR = nHarmonicsErr;
             this.TOTAL_TIME = totalTime;
             this.DELTA_TIME = deltaTime;
             this.N_HARMONICS = nHarmonics;

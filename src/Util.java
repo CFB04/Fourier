@@ -122,4 +122,30 @@ public final class Util {
 
         return bytes;
     }
+
+    public static double evenSampledMinimumSearch(double center, double initialRadius, int nSamplesPerIteration, int iterations, BlackBoxFunction bbf)
+    {
+        double min = center;
+
+        if(iterations > 0) {
+            int minIndex = 0;
+
+            for (int i = 0; i < nSamplesPerIteration; i++) { // TODO int i = 1
+                double x = center + initialRadius * (2.0 * i - nSamplesPerIteration + 1.0) / (double) (nSamplesPerIteration - 1);
+                if (bbf.evaluate(x) < bbf.evaluate(min)) {
+                    minIndex = i;
+                    min = x;
+                }
+            }
+
+            min = evenSampledMinimumSearch(min, initialRadius * 2.0 / (nSamplesPerIteration + 1.0), nSamplesPerIteration, iterations - 1, bbf);
+        }
+        return min;
+    }
+
+    @FunctionalInterface
+    public interface BlackBoxFunction
+    {
+        double evaluate(double... x);
+    }
 }
